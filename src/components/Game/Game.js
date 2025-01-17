@@ -21,7 +21,7 @@ function Game() {
 
   return(
     <>
-      <GuessTracker guesses={guesses} />
+      <GuessTracker guesses={guesses} answer={answer} />
       <GuessInput handleSubmitGuess={handleSubmitGuess} />
     </>
   ); 
