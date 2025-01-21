@@ -3,27 +3,27 @@ import React from 'react';
 import { sample } from '../../utils';
 import { WORDS } from '../../data';
 import { NUM_OF_GUESSES_ALLOWED } from '../../constants';
+import { checkGuess } from '../../game-helpers';
 
 import GuessInput from '../GuessInput';
 import GuessTracker from '../GuessTracker';
 import WonBanner from '../WonBanner';
 import LostBanner from '../LostBanner';
-
-// Pick a random word on every pageload.
-const answer = sample(WORDS);
-// To make debugging easier, we'll log the solution in the console.
-console.info({ answer });
+import Keyboard from '../Keyboard';
 
 function Game() {
+
+  const [answer, setAnswer] = React.useState(() => sample(WORDS));
+
   // running | won | lost
   const [gameStatus, setGameStatus] = React.useState('running');
 
   const [guesses, setGuesses] = React.useState([]);
 
   function handleSubmitGuess(tentativeGuess) {
-    setGuesses([...guesses, tentativeGuess]);
     const nextGuesses = [...guesses, tentativeGuess];
     setGuesses(nextGuesses);
+
     if (tentativeGuess.toUpperCase() === answer) {
       setGameStatus('won');
     } else if (nextGuesses.length >= NUM_OF_GUESSES_ALLOWED) {
@@ -31,19 +31,37 @@ function Game() {
     }
   }
 
-  return(
+  function handleRestart() {
+    const newAnswer = sample(WORDS);
+    setAnswer(newAnswer);
+    setGuesses([]);
+    setGameStatus('running');
+  }
+
+  const validatedGuesses = guesses.map((guess) =>
+    checkGuess(guess, answer)
+  );
+
+  return (
     <>
-      <GuessTracker guesses={guesses} answer={answer} />
-      <GuessInput 
+      <GuessTracker validatedGuesses={validatedGuesses} />
+      <GuessInput
         gameStatus={gameStatus}
-        handleSubmitGuess={handleSubmitGuess} 
+        handleSubmitGuess={handleSubmitGuess}
       />
+      <Keyboard validatedGuesses={validatedGuesses} />
+
       {gameStatus === 'won' && (
-        <WonBanner numOfGuesses={guesses.length} />
+        <WonBanner
+          numOfGuesses={guesses.length}
+          handleRestart={handleRestart}
+        />
       )}
-      {gameStatus === 'lost' && <LostBanner answer={answer} />}
+      {gameStatus === 'lost' && (
+        <LostBanner answer={answer} handleRestart={handleRestart} />
+      )}
     </>
-  ); 
+  );
 }
 
 export default Game;
